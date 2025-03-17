@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Sentiment Analysis Dashboard</h1>
+        <div class="input-section">
+            <textarea id="textInput" placeholder="Enter text to analyze sentiment..."></textarea>
+            <button onclick="analyzeSentiment()">Analyze</button>
+        </div>
+        <div class="results-section">
+            <div class="model-result">
+                <h3>Logistic Regression</h3>
+                <p id="logistic-result" class="result">-</p>
+            </div>
+            <div class="model-result">
+                <h3>SVM</h3>
+                <p id="svm-result" class="result">-</p>
+            </div>
+            <div class="model-result">
+                <h3>Naive Bayes</h3>
+                <p id="naive-bayes-result" class="result">-</p>
+            </div>
+            <div class="model-result">
+                <h3>RNN</h3>
+                <p id="rnn-result" class="result">-</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function analyzeSentiment() {
+            const text = document.getElementById('textInput').value;
+            if (!text) {
+                alert('Please enter some text to analyze');
+                return;
+            }
+
+            // Reset results
+            document.querySelectorAll('.result').forEach(el => el.textContent = 'Loading...');
+            
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: text })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('logistic-result').textContent = data.results.logistic_regression;
+                    document.getElementById('svm-result').textContent = data.results.svm;
+                    document.getElementById('naive-bayes-result').textContent = data.results.naive_bayes;
+                    document.getElementById('rnn-result').textContent = data.results.rnn;
+                    
+                    // Add classes for styling
+                    document.querySelectorAll('.result').forEach(el => {
+                        el.classList.remove('positive', 'negative');
+                        el.classList.add(el.textContent.toLowerCase());
+                    });
+                } else {
+                    alert('Error analyzing sentiment: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error analyzing sentiment: ' + error);
+            });
+        }
+    </script>
+</body>
+</html>
